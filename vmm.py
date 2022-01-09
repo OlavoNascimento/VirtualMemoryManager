@@ -19,7 +19,7 @@ class VirtualMemoryManager:
         self,
         tlb_size: int = 16,
         page_table_size: int = 2 ** 8,
-        frame_count: int = 2 ** 8,
+        frame_count: int = 2 ** 7,
         frame_size: int = 2 ** 8,
     ) -> None:
         self.tlb = TLB(tlb_size)
@@ -42,14 +42,14 @@ class VirtualMemoryManager:
 
     def get_physical_address(self, frame_number: int, offset: int):
         """
-        Calcula um endereço físico a partir de um número de frame e offset.
+        Calcula um endereço físico a partir de um número de quadro e offset.
         """
         return frame_number * self.physical_memory.frame_size + offset
 
     def read_addresses(self, addresses_file_path: str) -> None:
         """
         Lê um arquivo contendo endereços lógicos e transforma cada linha em um endereço físico.
-        Também apresenta o número de page faults e tlb hits do programa.
+        Também apresenta o número de page faults e TLB hits do programa.
         """
         addresses_count = 0
         page_faults = 0
@@ -62,38 +62,40 @@ class VirtualMemoryManager:
                 virtual_address = int(line)
                 page_number = self.get_page_number(virtual_address)
                 offset = self.get_offset(virtual_address)
-                logging.debug("Page number: %d, Offset: %d", page_number, offset)
+                logging.debug("Número de página: %d, Offset: %d", page_number, offset)
 
                 frame_number = self.tlb.get_frame_number(page_number)
-                if frame_number is None:
+                if frame_number:
+                    logging.debug("TLB hit, %d está na TLB", page_number)
+                    tlb_hits += 1
+                else:
                     # Endereço não está presente na TLB.
-                    if self.page_table[page_number] is None:
+                    if page_number in self.physical_memory.lru:
                         logging.debug(
-                            "Page fault, page number %d não está na tabela de páginas",
-                            page_number,
-                        )
-                        # Endereço não está presente na tabela de páginas, é preciso adiciona-lo a
-                        # memória física primeiro.
-                        frame_number = self.physical_memory.read_frame_from_backing_store(
-                            page_number
-                        )
-                        self.page_table[page_number] = frame_number
-                        page_faults += 1
-                    else:
-                        logging.debug(
-                            "Page number %d presente na tabela de páginas",
+                            "Número de página %d está presente na tabela de páginas",
                             page_number,
                         )
                         frame_number = self.page_table[page_number]
-
+                    else:
+                        # Endereço não está presente na tabela de páginas, é preciso adiciona-lo a
+                        # memória física primeiro.
+                        logging.debug(
+                            "Page fault, número de página %d não está na tabela de páginas",
+                            page_number,
+                        )
+                        frame_number = self.physical_memory.read_frame_from_backing_store(
+                            page_number, self.page_table
+                        )
+                        self.page_table[page_number] = frame_number
+                        page_faults += 1
                     self.tlb.add(page_number, frame_number)
-                else:
-                    logging.debug("TLB hit")
-                    tlb_hits += 1
 
+                # Atualiza a frequência de acesso do número de página atual.
+                self.physical_memory.update_lru(page_number)
                 physical_address = self.get_physical_address(frame_number, offset)
                 logging.debug(
-                    "Page number %d corresponde ao frame number %d na memória física, virtual address: %d, physical address: %d, conteudo: %d",
+                    "Página %d corresponde ao quadro %d na memória física,"
+                    " endereço virtual: %d, endereço físico: %d, conteúdo: %d",
                     page_number,
                     frame_number,
                     virtual_address,
@@ -111,8 +113,8 @@ class VirtualMemoryManager:
                 addresses_count += 1
 
             statistics_string = (
-                f"Page-fault: {page_faults / addresses_count}%\n"
-                f"TLB hit: {tlb_hits/ addresses_count}%\n"
+                f"Page fault: {round((page_faults / addresses_count) * 100, 2)}%\n"
+                f"TLB hit: {round((tlb_hits/ addresses_count) * 100, 2)}%\n"
             )
             print(statistics_string, end="")
             output.write(statistics_string)

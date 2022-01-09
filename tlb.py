@@ -49,10 +49,8 @@ class TLB:
         """
         Retorna o frame de correspondente a uma página, caso não exista retorna None.
         """
-        for (tlb_page_number, tlb_frame_number) in self.tlb:
+        for index, (tlb_page_number, tlb_frame_number) in enumerate(self.tlb):
             if tlb_page_number == page_number:
+                self.update_lru(index)
                 return tlb_frame_number
         return None
-
-    def __getitem__(self, key: int):
-        return self.tlb[key]

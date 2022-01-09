@@ -37,5 +37,6 @@ compilar_consulta: $(SCRIPTS_DIR)/consultarBS_C_v2.c
 	gcc $(CFLAGS) -o $(TESTER_BIN) $^
 
 clean:
-	rm -f $(GENERATOR_BIN) $(TESTER_BIN) output.txt *.o
+	rm -r bin
+	rm -f teste.dat output.txt *.o
 
