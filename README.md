@@ -4,5 +4,10 @@ O projeto implementa um gerenciador de memória virtual com base no exercício p
 # Como executar
 1. Execute make dentro do diretório do projeto.
 
+# Verificar resultados
+1. Execute make consultar
+2. Compare a saída com os resultados do programa.
+
 # Referências
 [1] Silberschatz, Abraham, Peter B. Galvin, and Greg Gagne. 2003. Operating system concepts. [Hoboken, NJ]: Wiley.
+

@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from pathlib import Path
 
 from physical_memory import PhysicalMemory
 from tlb import TLB
@@ -18,9 +19,9 @@ class VirtualMemoryManager:
     def __init__(
         self,
         tlb_size: int = 16,
-        page_table_size: int = 2 ** 8,
-        frame_count: int = 2 ** 7,
-        frame_size: int = 2 ** 8,
+        page_table_size: int = 2**8,
+        frame_count: int = 2**7,
+        frame_size: int = 2**8,
     ) -> None:
         self.tlb = TLB(tlb_size)
         self.page_table: list[int | None] = [None] * page_table_size
@@ -121,16 +122,23 @@ class VirtualMemoryManager:
 
 
 def main():
+    # Habilita mensagens de debug
+    # logging.basicConfig(level=logging.DEBUG)
+
     if len(sys.argv) <= 1:
         print(
             "ERRO: Forneça o arquivo contendo os endereços lógicos para o programa!",
             file=sys.stderr,
         )
         sys.exit(1)
-    # Habilita mensagens de debug
-    # logging.basicConfig(level=logging.DEBUG)
-
     file_path = sys.argv[1]
+    if not Path(file_path).is_file():
+        print(
+            f"ERRO: Arquivo {file_path} não existe! Consulte o arquivo README.md para instruções de execução.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     vmm = VirtualMemoryManager()
     vmm.read_addresses(file_path)
 
