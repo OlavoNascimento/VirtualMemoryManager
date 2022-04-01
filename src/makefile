@@ -1,11 +1,11 @@
 # Nome do executável
 EXECUTABLE = vmm.py
 BIN_DIR = bin
-SCRIPTS_DIR = scripts
+SCRIPTS_DIR = ../scripts
 GENERATOR_BIN = $(BIN_DIR)/generate
 TESTER_BIN = $(BIN_DIR)/test
 
-ADDRESSES_FILE = addresses.txt
+ADDRESSES_FILE = ../assets/addresses.txt
 
 # Flags de compilação
 CFLAGS = -fstack-protector-all -std=c99 -O2
